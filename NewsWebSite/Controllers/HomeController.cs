@@ -109,7 +109,7 @@ namespace NewsWebSite.Controllers
         [HttpPost]
         public ActionResult CreateArticle(CreateArticleModel a)
         {
-            if (!ModelState.IsValid) return RedirectToAction("Index");
+            if (!ModelState.IsValid) return View(a);
             var id = repo.Save(a);
             FIleHelper.SaveOrUpdateArticleImage(Server.MapPath(ConfigurationManager.AppSettings["UserImagesFolder"].ToString()), a.Image, id);
             return RedirectToAction("Article", new { Id = id });
