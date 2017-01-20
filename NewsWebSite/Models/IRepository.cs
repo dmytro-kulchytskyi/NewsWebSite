@@ -16,8 +16,8 @@ namespace NewsWebSite.Models
         int GetCountOfLines();
         IList<Article> GetList(int starFrom, int count);
         PagedList<DemoArticle> GetDemoList(int starFrom, int count);
-        int Save(Article article);
-        int Save(CreateArticleModel model);
+        int SaveOrUpdate(Article article);
+        int SaveOrUpdate(CreateArticleModel model);
         string GetDemoListJson(int startFrom, int count);
     }
 
@@ -25,17 +25,23 @@ namespace NewsWebSite.Models
     {
         readonly ISessionFactory sessionFactory;
 
+
         public NHibernateRepository(ISessionFactory sessionFactory)
         {
             this.sessionFactory = sessionFactory;
         }
+      
 
-        public int Save(Article a)
+        public int SaveOrUpdate(Article a)
         {
             using (var session = sessionFactory.OpenSession())
             {
                 using (var t = session.BeginTransaction())
                 {
+                    var timeNow = DateTime.Now.ToString("MM/dd/yy H:mm"); ;
+                    if (a.CreateDate == null)
+                        a.CreateDate = timeNow;
+                    a.LastUpdateDate = timeNow;
                     session.SaveOrUpdate(a);
                     t.Commit();
                     return a.Id;
@@ -44,21 +50,16 @@ namespace NewsWebSite.Models
             }
         }
 
-        public string GetDemoListJson(int startFrom, int count)
-        {
-            var list = GetDemoList(startFrom, count);
-            return JsonConvert.SerializeObject(list);
-        }
-        public int Save(CreateArticleModel model)
+       
+        public int SaveOrUpdate(CreateArticleModel model)
         {
             Article a = new Article();
             a.Title = model.Title;
             a.FullDescription = model.FullDescription;
             a.Image = model.Image.FileName;
-            a.CreateDate = DateTime.Now;
-            a.LastUpdateDate = a.CreateDate;
-            return Save(a);
+            return SaveOrUpdate(a);
         }
+
 
         public Article GetItem(int id)
         {
@@ -67,6 +68,7 @@ namespace NewsWebSite.Models
                 return session.Get<Article>(id);
             }
         }
+
 
         public IList<Article> GetList(int starFrom = 0, int count = 10)
         {
@@ -81,12 +83,13 @@ namespace NewsWebSite.Models
             }
         }
 
+
         public PagedList<DemoArticle> GetDemoList(int starFrom = 0, int count = 10)
         {
             using (var session = sessionFactory.OpenSession())
             {
                 var results = new PagedList<DemoArticle>();
-               
+
                 results.AddRange(session.CreateCriteria<Article>()
                     .SetProjection(Projections.ProjectionList()
                     .Add(Projections.Id(), "Id")
@@ -103,6 +106,13 @@ namespace NewsWebSite.Models
                 return results;
             }
         }
+
+        public string GetDemoListJson(int startFrom, int count)
+        {
+            var list = GetDemoList(startFrom, count);
+            return JsonConvert.SerializeObject(list);
+        }
+
         public int GetCountOfLines()
         {
             using (var session = sessionFactory.OpenSession())

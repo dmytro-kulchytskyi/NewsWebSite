@@ -38,9 +38,9 @@ namespace NewsWebSite.Controllers
             {
                 var a = new Article();
                 a.Title = i.ToString();
-                a.CreateDate = DateTime.Now;
-                a.LastUpdateDate = DateTime.Now;
-                repo.Save(a);
+                //a.CreateDate = DateTime.Now;
+                //a.LastUpdateDate = DateTime.Now;
+                repo.SaveOrUpdate(a);
 
             }
             return Content("ok");
@@ -99,10 +99,7 @@ namespace NewsWebSite.Controllers
             }
 
             if (changesExist)
-            {
-                baseArticle.LastUpdateDate = DateTime.Now;
-                repo.Save(baseArticle);
-            }
+                repo.SaveOrUpdate(baseArticle);
             return RedirectToAction("Article", new { Id = edited.Id });
         }
 
@@ -110,7 +107,7 @@ namespace NewsWebSite.Controllers
         public ActionResult CreateArticle(CreateArticleModel a)
         {
             if (!ModelState.IsValid) return View(a);
-            var id = repo.Save(a);
+            var id = repo.SaveOrUpdate(a);
             FIleHelper.SaveOrUpdateArticleImage(Server.MapPath(ConfigurationManager.AppSettings["UserImagesFolder"].ToString()), a.Image, id);
             return RedirectToAction("Article", new { Id = id });
         }
